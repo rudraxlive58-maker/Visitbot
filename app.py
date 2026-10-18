@@ -4,7 +4,7 @@ import aiohttp
 import asyncio
 import json
 from byte import encrypt_api, Encrypt_ID
-from visit_count_pb2 import Info  # Import the generated protobuf class
+from visit_count_pb2 import Info
 
 app = Flask(__name__)
 
@@ -20,7 +20,14 @@ def load_tokens(server_name):
         with open(path, "r") as f:  
             data = json.load(f)  
 
-        tokens = [item["token"] for item in data if "token" in item and item["token"] not in ["", "N/A"]]  
+        tokens = []
+        for item in data:
+            # Yahan humne "jwt" aur "token" dono ko check kiya hai
+            if "jwt" in item and item["jwt"] not in ["", "N/A"]:
+                tokens.append(item["jwt"])
+            elif "token" in item and item["token"] not in ["", "N/A"]:
+                tokens.append(item["token"])
+                
         return tokens  
     except Exception as e:  
         app.logger.error(f"❌ Token load error for {server_name}: {e}")  
@@ -59,7 +66,6 @@ async def visit(session, url, token, uid, data):
         "Host": url.replace("https://", "").split("/")[0]
     }
     try:
-        # Timeout add kiya hai taaki request hang na ho
         async with session.post(url, headers=headers, data=data, ssl=False, timeout=10) as resp:
             if resp.status == 200:
                 response_data = await resp.read()
@@ -67,12 +73,11 @@ async def visit(session, url, token, uid, data):
             else:
                 return False, None
     except Exception as e:
-        # Agar koi token dead hai toh error log hoga par loop nahi rukega
         return False, None
 
 async def send_until_2000_success(tokens, uid, server_name, target_success=2000):
     url = get_url(server_name)
-    connector = aiohttp.TCPConnector(limit=0) # Unlimited concurrent connections
+    connector = aiohttp.TCPConnector(limit=0)
     total_success = 0
     total_sent = 0
     first_success_response = None
@@ -83,7 +88,6 @@ async def send_until_2000_success(tokens, uid, server_name, target_success=2000)
         data = bytes.fromhex(encrypted)  
 
         while total_success < target_success:  
-            # Ek baar mein 300 requests bhejta hai taaki server crash na ho
             batch_size = min(target_success - total_success, 300)  
             tasks = [  
                 asyncio.create_task(visit(session, url, tokens[(total_sent + i) % len(tokens)], uid, data))  
@@ -106,7 +110,6 @@ async def send_until_2000_success(tokens, uid, server_name, target_success=2000)
 
     return total_success, total_sent, player_info
 
-# URL me angle brackets < > lagana zaroori hai Flask ke liye
 @app.route('/<string:server>/<int:uid>', methods=['GET'])
 def send_visits(server, uid):
     server = server.upper()
@@ -119,7 +122,6 @@ def send_visits(server, uid):
     print(f"🚀 Sending visits to UID: {uid} using {len(tokens)} tokens")  
     print(f"Waiting for total {target_success} successful visits...")  
 
-    # Async function ko run karne ke liye asyncio.run use kiya hai
     total_success, total_sent, player_info = asyncio.run(send_until_2000_success(  
         tokens, uid, server,  
         target_success=target_success  
@@ -137,7 +139,6 @@ def send_visits(server, uid):
         }  
         return jsonify(player_info_response), 200  
     else:  
-        # Agar 2000 request ke baad bhi koi valid response nahi aaya (Tokens dead hone ki wajah se)
         return jsonify({
             "error": "Could not decode player information. Tokens might be expired or invalid.",
             "success_visits": total_success,
