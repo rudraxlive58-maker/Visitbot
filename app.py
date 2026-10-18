@@ -1,11 +1,13 @@
-#This was made by AGAJAYOFFICIAL
-#This was made by AGAJAYOFFICIAL
-#This was made by AGAJAYOFFICIAL
-#This was made by AGAJAYOFFICIAL
 from flask import Flask, jsonify
-import aiohttp
-import asyncio
-import json
+
+app = Flask(__name__)
+
+@app.route("/")
+def home():
+    return jsonify({
+        "status": "online",
+        "message": "API is running"
+    })
 from byte import encrypt_api, Encrypt_ID
 from visit_count_pb2 import Info  # Import the generated protobuf class
 
