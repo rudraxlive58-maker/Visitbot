@@ -1,4 +1,7 @@
 from flask import Flask, jsonify
+import json
+import aiohttp
+import asyncio
 
 app = Flask(__name__)
 
@@ -8,6 +11,9 @@ def home():
         "status": "online",
         "message": "API is running"
     })
+
+from byte import encrypt_api, Encrypt_ID
+from visit_count_pb2 import Info
 from byte import encrypt_api, Encrypt_ID
 from visit_count_pb2 import Info  # Import the generated protobuf class
 
