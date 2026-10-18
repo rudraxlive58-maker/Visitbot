@@ -1,29 +1,16 @@
+#This was made by AGAJAYOFFICIAL
+#This was made by AGAJAYOFFICIAL
+#This was made by AGAJAYOFFICIAL
+#This was made by AGAJAYOFFICIAL
 from flask import Flask, jsonify
-import json
 import aiohttp
 import asyncio
-
-app = Flask(__name__)
-
-@app.route("/")
-def home():
-    return jsonify({
-        "status": "online",
-        "message": "API is running"
-    })
-
-from byte import encrypt_api, Encrypt_ID
-from visit_count_pb2 import Info
+import json
 from byte import encrypt_api, Encrypt_ID
 from visit_count_pb2 import Info  # Import the generated protobuf class
 
 app = Flask(name)
-@app.route("/")
-def home():
-return jsonify({
-"status": "online",
-"message": "API is running"
-})
+
 def load_tokens(server_name):
 try:
 if server_name == "IND":
