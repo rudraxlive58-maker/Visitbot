@@ -3,6 +3,7 @@ from flask import Flask, jsonify
 import aiohttp
 import asyncio
 import json
+import os
 from byte import encrypt_api, Encrypt_ID
 from visit_count_pb2 import Info
 
@@ -10,19 +11,24 @@ app = Flask(__name__)
 
 def load_tokens(server_name):
     try:
+        # Dhyan dein: Aapki file ka naam token_IND.json hai (Capital IND)
         if server_name == "IND":
-            path = "token_ind.json"
+            filename = "token_IND.json"
         elif server_name in {"BR", "US", "SAC", "NA"}:
-            path = "token_br.json"
+            filename = "token_br.json"
         else:
-            path = "token_ind.json"
+            filename = "token_IND.json"
+
+        # Vercel ke server par file ka exact path dhoondhne ke liye
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+        path = os.path.join(base_dir, filename)
 
         with open(path, "r") as f:  
             data = json.load(f)  
 
         tokens = []
         for item in data:
-            # Yahan humne "jwt" aur "token" dono ko check kiya hai
+            # "jwt" aur "token" dono ko check karega
             if "jwt" in item and item["jwt"] not in ["", "N/A"]:
                 tokens.append(item["jwt"])
             elif "token" in item and item["token"] not in ["", "N/A"]:
@@ -31,6 +37,7 @@ def load_tokens(server_name):
         return tokens  
     except Exception as e:  
         app.logger.error(f"❌ Token load error for {server_name}: {e}")  
+        print(f"FILE ERROR: {e}")
         return []
 
 def get_url(server_name):
